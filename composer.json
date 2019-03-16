@@ -1,0 +1,30 @@
+{
+    "name": "lukaswhite/temporary-files",
+    "description": "Self-destructing temporary files for Laravel",
+    "type": "project",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "lukaswhite",
+            "email": "hello@lukaswhite.com"
+        }
+    ],
+    "require": {
+        "illuminate/support": "~5.5"
+    },
+    "autoload": {
+        "psr-4": {
+            "Lukaswhite\\TemporaryFiles\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Lukaswhite\\TemporaryFiles\\TemporaryFilesServiceProvider"
+            ],
+            "aliases": {
+                "TemporaryFiles": "Lukaswhite\\TemporaryFiles\\Facades\\TemporaryFilesFacade"
+            }
+        }
+    }
+}
