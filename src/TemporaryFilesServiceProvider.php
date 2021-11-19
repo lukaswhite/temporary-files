@@ -27,8 +27,12 @@ class TemporaryFilesServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        // Merge in the config settings
         $configPath = __DIR__ . '/config.php';
+
+        $this->publishes([
+            $configPath => config_path('repository.php')
+        ]);
+
         $this->mergeConfigFrom( $configPath, 'temporary-files' );
 
         // Register the package's migrations
