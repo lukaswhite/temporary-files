@@ -7,6 +7,8 @@ use Carbon\Carbon;
 use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Route;
 use Lukaswhite\TemporaryFiles\Contracts\GeneratesUniqueIds;
+use Lukaswhite\TemporaryFiles\Events\TemporaryFileDeleted;
+use Lukaswhite\TemporaryFiles\Exceptions\MissingManifestException;
 use Lukaswhite\TemporaryFiles\Helpers\IdGenerator;
 use Lukaswhite\TemporaryFiles\Helpers\Reader;
 use Lukaswhite\TemporaryFiles\Helpers\Manifest;
@@ -122,10 +124,11 @@ class TemporaryFiles
             Session::put( config('temporary-files.session_key' ), $file->getId( ) );
         }
 
-        // If we're using delayed jobs for the cleanup process, dispatch it.
-        if ( config( 'temporary-files.mode' ) === self::MODE_QUEUE ) {
+        // If we're using delayed jobs for the cleanup process, dispatch it with the appropriate
+        // delay
+        if (config('temporary-files.mode') === self::MODE_QUEUE) {
             DeleteTemporaryFile::dispatch( $file )
-                ->delay( now( )->addMinutes( config( 'temporary-files.lifetime' ) ) );
+                ->delay(now()->addMinutes(config( 'temporary-files.lifetime')));
         }
 
         return $file;
@@ -136,10 +139,33 @@ class TemporaryFiles
      *
      * @param string $id
      * @return TemporaryFile
+     * @throws MissingManifestException
      */
-    public function get( string $id ) : ?TemporaryFile
+    public function get(string $id) : ?TemporaryFile
     {
-        return $this->reader->get( $id );
+        return $this->reader->get($id);
+    }
+
+    /**
+     * Delete a file by its ID.
+     *
+     * @param string $id
+     * @throws MissingManifestException
+     */
+    public function delete(string $id)
+    {
+        $file = $this->get($id);
+        // If it can't be found, there's not really any need to throw an error. They're
+        // designed to be cleaned up automatically.
+        if(!$file) {
+            return;
+        }
+        // Don't delete it if it's locked
+        if($file->isLocked()) {
+            return;
+        }
+        $this->getDisk()->deleteDirectory($file->getDirectory());
+        event(new TemporaryFileDeleted($file));
     }
 
     /**
@@ -147,7 +173,7 @@ class TemporaryFiles
      *
      * @return Filesystem
      */
-    public function getDisk( )
+    public function getDisk()
     {
         return $this->disk;
     }
@@ -160,7 +186,7 @@ class TemporaryFiles
      *
      * @return void
      */
-    public function routes( )
+    public function routes()
     {
         Route::post(
             config( 'temporary-files.upload_uri', '/files/temporary' ),

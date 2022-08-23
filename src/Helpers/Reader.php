@@ -112,7 +112,7 @@ class Reader
         $path = sprintf( '%s%s%s', $this->directory, DIRECTORY_SEPARATOR, $id );
 
         // If the file does not exist, which isn't necessarily unexpected behavior,
-        // simply return FALSE
+        // simply return null
         if ( ! $this->disk->exists( $path ) ) {
             return null;
         }

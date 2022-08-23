@@ -46,26 +46,26 @@ class TemporaryFilesServiceProvider extends ServiceProvider
             ] );
         }
 
-        $this->app->bind( GeneratesUniqueIds::class, function( ) {
-            return app( )->make( config( 'temporary-files.id_generator', IdGenerator::class ) );
+        $this->app->bind(GeneratesUniqueIds::class, function() {
+            return app()->make(config('temporary-files.id_generator', IdGenerator::class));
         } );
 
         $this->app->bind( TransformsTemporaryFiles::class, function( ) {
-            return app( )->make( config( 'temporary-files.transformer', Transformer::class ) );
+            return app()->make(config('temporary-files.transformer', Transformer::class));
         } );
 
         $this->app->singleton( Reader::class, function( ) {
             return new Reader(
-                Storage::disk( config( 'temporary-files.disk' ) ),
-                config( 'temporary-files.directory' )
+                Storage::disk(config('temporary-files.disk')),
+                config('temporary-files.directory')
             );
         } );
 
         $this->app->singleton( TemporaryFiles::class, function( ) {
             return new TemporaryFiles(
-                Storage::disk( config( 'temporary-files.disk' ) ),
-                app( )->make( Reader::class ),
-                app( )->make( GeneratesUniqueIds::class )
+                Storage::disk(config('temporary-files.disk')),
+                app()->make(Reader::class ),
+                app()->make(GeneratesUniqueIds::class )
             );
         } );
 
